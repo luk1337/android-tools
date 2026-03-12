@@ -1,4 +1,4 @@
-From 7d27b1d2159d349f7f15a0b29c022bb5eb001fa0 Mon Sep 17 00:00:00 2001
+From 17afe3d84fe2ae34b79d520db879688020b9ae6e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=C4=90o=C3=A0n=20Tr=E1=BA=A7n=20C=C3=B4ng=20Danh?=
  <congdanhqx@gmail.com>
 Date: Sun, 1 Nov 2020 15:51:35 +0700
@@ -6,16 +6,15 @@ Subject: [PATCH] adb: disable mDNS
 
 ---
  adb.cpp                | 15 ---------------
- client/commandline.cpp | 26 --------------------------
- client/main.cpp        |  2 --
- socket_spec.cpp        | 25 +------------------------
- 4 files changed, 1 insertion(+), 67 deletions(-)
+ client/commandline.cpp | 41 -----------------------------------------
+ socket_spec.cpp        | 24 +-----------------------
+ 3 files changed, 1 insertion(+), 79 deletions(-)
 
 diff --git a/adb.cpp b/adb.cpp
-index eb729f5..1be30eb 100644
+index ae57b00..6321981 100644
 --- a/adb.cpp
 +++ b/adb.cpp
-@@ -1228,21 +1228,6 @@ void adb_set_reject_kill_server(bool value) {
+@@ -1253,21 +1253,6 @@ void adb_set_reject_kill_server(bool value) {
  }
  
  static bool handle_mdns_request(std::string_view service, int reply_fd) {
@@ -38,10 +37,10 @@ index eb729f5..1be30eb 100644
  }
  
 diff --git a/client/commandline.cpp b/client/commandline.cpp
-index 6620836..36fb3d6 100644
+index 5c9871d..eb5162c 100644
 --- a/client/commandline.cpp
 +++ b/client/commandline.cpp
-@@ -135,8 +135,6 @@ static void help() {
+@@ -138,8 +138,6 @@ static void help() {
          "       localfilesystem:<unix domain socket name>\n"
          " reverse --remove REMOTE  remove specific reverse socket connection\n"
          " reverse --remove-all     remove all reverse socket connections from device\n"
@@ -50,7 +49,7 @@ index 6620836..36fb3d6 100644
          "\n"
          "file transfer:\n"
          " push [--sync] [-z ALGORITHM] [-Z] LOCAL... REMOTE\n"
-@@ -255,7 +253,6 @@ static void help() {
+@@ -258,7 +256,6 @@ static void help() {
          " $ANDROID_SERIAL          serial number to connect to (see -s)\n"
          " $ANDROID_LOG_TAGS        tags to be used by logcat (see logcat --help)\n"
          " $ADB_LOCAL_TRANSPORT_MAX_PORT max emulator scan port (default 5585, 16 emus)\n"
@@ -58,7 +57,7 @@ index 6620836..36fb3d6 100644
          "\n"
          "Online documentation: https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/main/docs/user/adb.1.md\n"
          "\n"
-@@ -1963,29 +1960,6 @@ int adb_commandline(int argc, const char** argv) {
+@@ -1937,44 +1934,6 @@ int adb_commandline(int argc, const char** argv) {
  
          ReadOrderlyShutdown(fd);
          return 0;
@@ -72,43 +71,42 @@ index 6620836..36fb3d6 100644
 -            error_exit("failed to check server version: %s", error.c_str());
 -        }
 -
--        std::string query = "host:mdns:";
 -        if (!strcmp(argv[0], "check")) {
--            if (argc != 1) error_exit("mdns %s doesn't take any arguments", argv[0]);
--            query += "check";
+-            if (argc != 1) {
+-                error_exit("mdns %s doesn't take any arguments", argv[0]);
+-            }
+-            return adb_query_command("host:mdns:check");
 -        } else if (!strcmp(argv[0], "services")) {
--            if (argc != 1) error_exit("mdns %s doesn't take any arguments", argv[0]);
--            query += "services";
+-            if (argc != 1) {
+-                error_exit("mdns %s doesn't take any arguments", argv[0]);
+-            }
 -            printf("List of discovered mdns services\n");
+-            return adb_query_command("host:mdns:services");
+-        } else if (!strcmp(argv[0], "track-services")) {
+-            if (argc != 2) {
+-                error_exit("mdns %s take two arguments", argv[0]);
+-            }
+-
+-            std::string service = "host:"s + HostServices::kTrackMdnsServices;
+-            if (!strcmp(argv[1], "--proto-binary")) {
+-                return adb_connect_command(service);
+-            } else if (!strcmp(argv[1], "--proto-text")) {
+-                ProtoBinaryToText<adb::proto::MdnsServices> callback("\nServices:\n");
+-                return adb_connect_command(service, nullptr, &callback);
+-            } else {
+-                error_exit("unknown mdns command [%s] flag '%s'", argv[0], argv[1]);
+-            }
 -        } else {
 -            error_exit("unknown mdns command [%s]", argv[0]);
 -        }
--
--        return adb_query_command(query);
      }
      /* do_sync_*() commands */
      else if (!strcmp(argv[0], "ls")) {
-diff --git a/client/main.cpp b/client/main.cpp
-index 79a3345..fe6d20b 100644
---- a/client/main.cpp
-+++ b/client/main.cpp
-@@ -68,11 +68,9 @@ void adb_server_cleanup() {
-     //   1. close_smartsockets, so that we don't get any new clients
-     //   2. kick_all_transports, to avoid writing only part of a packet to a transport.
-     //   3. usb_cleanup, to tear down the USB stack.
--    //   4. mdns_cleanup, to tear down mdns stack.
-     close_smartsockets();
-     kick_all_transports();
-     usb_cleanup();
--    mdns_cleanup();
- }
- 
- static void intentionally_leak() {
 diff --git a/socket_spec.cpp b/socket_spec.cpp
-index 5f0cb3f..b3a80eb 100644
+index 5053e36..b01cb5b 100644
 --- a/socket_spec.cpp
 +++ b/socket_spec.cpp
-@@ -204,30 +204,7 @@ bool socket_spec_connect(unique_fd* fd, std::string_view address, int* port, std
+@@ -222,29 +222,7 @@ bool socket_spec_connect(unique_fd* fd, std::string_view address, int* port, std
          if (tcp_host_is_local(hostname)) {
              fd->reset(network_loopback_client(port_value, SOCK_STREAM, error));
          } else {
@@ -116,16 +114,15 @@ index 5f0cb3f..b3a80eb 100644
 -            // Check if the address is an mdns service we can connect to.
 -            if (auto mdns_info = mdns_get_connect_service_info(std::string(address.substr(4)));
 -                mdns_info != std::nullopt) {
--                fd->reset(network_connect(mdns_info->addr, mdns_info->port, SOCK_STREAM, 0, error));
+-                fd->reset(network_connect(mdns_info->v4_address_string(), mdns_info->port,
+-                                          SOCK_STREAM, 0, error));
 -                if (fd->get() != -1) {
 -                    // TODO(joshuaduong): We still show the ip address for the serial. Change it to
 -                    // use the mdns instance name, so we can adjust to address changes on
 -                    // reconnects.
 -                    port_value = mdns_info->port;
 -                    if (serial) {
--                        *serial = android::base::StringPrintf("%s.%s",
--                                                              mdns_info->service_name.c_str(),
--                                                              mdns_info->service_type.c_str());
+-                        *serial = std::format("{}.{}", mdns_info->instance, mdns_info->service);
 -                    }
 -                }
 -            } else {
