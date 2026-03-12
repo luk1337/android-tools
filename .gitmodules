@@ -21,7 +21,7 @@
 [submodule "boringssl"]
 	shallow = true
 	path = vendor/boringssl
-	url = https://boringssl.googlesource.com/boringssl.git
+	url = https://android.googlesource.com/platform/external/boringssl.git
 [submodule "vendor/mkbootimg"]
 	shallow = true
 	path = vendor/mkbootimg

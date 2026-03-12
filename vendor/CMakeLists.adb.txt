@@ -18,6 +18,8 @@ set(libadb_SOURCES
 	adb/client/bugreport.cpp
 	adb/client/commandline.cpp
 	adb/client/console.cpp
+	adb/client/detach.cpp
+	adb/client/discovered_services.cpp
 	adb/client/file_sync_client.cpp
 	adb/client/incremental.cpp
 	adb/client/incremental_server.cpp
@@ -26,6 +28,15 @@ set(libadb_SOURCES
 	adb/client/main.cpp
 	adb/client/pairing/pairing_client.cpp
 	adb/client/usb_libusb.cpp
+	adb/client/usb_libusb_device.cpp
+	adb/client/usb_libusb_hotplug.cpp
+	adb/client/usb_libusb_inhouse_hotplug.cpp
+	adb/client/transport_emulator.cpp
+	adb/client/mdns_tracker.cpp
+	adb/client/mdns_utils.cpp
+	adb/client/transport_mdns.cpp
+	adb/client/transport_usb.cpp
+	adb/client/pairing/pairing_client.cpp
 	adb/pairing_auth/aes_128_gcm.cpp
 	adb/pairing_auth/pairing_auth.cpp
 	adb/pairing_connection/pairing_connection.cpp
@@ -180,8 +191,6 @@ add_executable(adb
 	  adb/socket_spec.cpp
 	  adb/transport.cpp
 	  adb/transport_fd.cpp
-	  adb/client/transport_local.cpp
-	  adb/client/transport_usb.cpp
 	  adb/types.cpp
 	  ${ADB_KEY_TYPE_PROTO_HDRS})
 

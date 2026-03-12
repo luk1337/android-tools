@@ -59,7 +59,7 @@ are all written in Python.
 
 Additionally the following software is required at compile-time:
 
-1. A C and C++ compiler (either [GCC][gcc] >= 10.X or [clang][clang])
+1. A C and C++ compiler (either [GCC][gcc] >= 13.X or [clang][clang])
 2. The [Go compiler][golang]
 3. [CMake][cmake]
 4. [Perl][perl]
