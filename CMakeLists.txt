@@ -9,8 +9,10 @@ include(GNUInstallDirs)
 # This helps to build vendor projects with or without any patching. Also if any
 # files are changed in vendor projects those can be retained with this option.
 option(ANDROID_TOOLS_PATCH_VENDOR "Patch vendor projects using patches directory" ON)
+option(ANDROID_TOOLS_USE_BUNDLED_CORROSION "Use bundled corrosion instead of system provided one" OFF)
 option(ANDROID_TOOLS_USE_BUNDLED_FMT "Use bundled fmt library instead of system provided one" OFF)
 option(ANDROID_TOOLS_USE_BUNDLED_LIBUSB "Use bundled libusb library instead of system provided one" OFF)
+option(ANDROID_TOOLS_ADB_ENABLE_MDNS "Enable ADB mDNS support" OFF)
 option(ANDROID_TOOLS_LIBUSB_ENABLE_UDEV "Enable udev for device enumeration and hotplug support" OFF)
 
 # Install bash/zsh completion files.
@@ -45,8 +47,9 @@ add_subdirectory(vendor)
 # patched versions of the vendored dependencies.
 set(CPACK_SOURCE_GENERATOR "TXZ")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${ANDROID_VERSION}")
-set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/" "/.github/" "/tests/"
-	"/test/" "/testdata/" "/extras/simpleperf/scripts/" "/extras/simpleperf/demo/"
+set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/"
+	"/extras/simpleperf/scripts/" "/extras/simpleperf/demo/"
+	"/vendor/adb/client/adbmdns/Cargo.lock"
 	"aes_128_gcm.txt" "aes_256_gcm.txt"
 	"/fuzz/"
 	"/wycheproof_testvectors/"
@@ -56,7 +59,6 @@ set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/" "/.github/" "/tests
 	"\\\\.data$"
 	"\\\\.git$"
 	"\\\\.html$"
-	"\\\\.orig$"
 	"\\\\.pdf$"
 	"\\\\.pem$"
 	"\\\\.png$"
