@@ -47,9 +47,9 @@ add_subdirectory(vendor)
 # patched versions of the vendored dependencies.
 set(CPACK_SOURCE_GENERATOR "TXZ")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${ANDROID_VERSION}")
-set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/"
-	"/extras/simpleperf/scripts/" "/extras/simpleperf/demo/"
-	"/vendor/adb/client/adbmdns/Cargo.lock"
+set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/" "/.github/" "/tests/"
+	"/test/" "/testdata/" "/extras/simpleperf/scripts/" "/extras/simpleperf/demo/"
+	"vendor/adb/client/adbmdns/.cargo", "vendor/adb/client/adbmdns/vendor",
 	"aes_128_gcm.txt" "aes_256_gcm.txt"
 	"/fuzz/"
 	"/wycheproof_testvectors/"
@@ -59,6 +59,7 @@ set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/"
 	"\\\\.data$"
 	"\\\\.git$"
 	"\\\\.html$"
+	"\\\\.orig$"
 	"\\\\.pdf$"
 	"\\\\.pem$"
 	"\\\\.png$"
@@ -70,3 +71,15 @@ set(CPACK_SOURCE_IGNORE_FILES "/patches/" "/build/" "/.git/"
 	"\\\\.zip$"
 )
 include(CPack)
+
+add_custom_command(
+	OUTPUT ${CMAKE_BINARY_DIR}/${ANDROID_VENDOR}-${ANDROID_VERSION}-vendor.tar.xz
+	COMMAND ${CMAKE_COMMAND} -E tar
+			cJf ${CMAKE_BINARY_DIR}/${ANDROID_VENDOR}-${ANDROID_VERSION}-vendor.tar.xz
+			vendor/adb/client/adbmdns/vendor
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+add_custom_target(vendor_source
+	DEPENDS ${CMAKE_BINARY_DIR}/${ANDROID_VENDOR}-${ANDROID_VERSION}-vendor.tar.xz
+)

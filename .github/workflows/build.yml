@@ -6,6 +6,8 @@ jobs:
   upload-src:
     name: Upload the source
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.build_and_install.outputs.version }}
     steps:
       - name: prep ubuntu
         run: |
@@ -38,7 +40,8 @@ jobs:
         run: |
           cd vendor/adb/docs/user
           pandoc -s -t man adb.1.md -o adb.1
-      - name: build & install
+      - id: build_and_install
+        name: build & install
         run: |
           export SOURCE_DATE_EPOCH=$(date +%s)
           echo "SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
@@ -48,14 +51,21 @@ jobs:
             -DANDROID_TOOLS_USE_BUNDLED_LIBUSB=ON \
             -DANDROID_TOOLS_ADB_ENABLE_MDNS=ON \
             -B build
-          cmake --build build --target package_source
+          cmake --build build --target package_source vendor_source
           for x in sha1sum sha256sum sha512sum b2sum; do
-            printf "$x " && $x ${{ github.workspace }}/build/android-tools-*.tar.xz | cut -d " " -f 1
+            printf "$x " && $x ${{ github.workspace }}/build/android-tools-*.tar.xz
           done
+          VERSION=$(grep PLATFORM_TOOLS_VERSION ${{ github.workspace }}/build/vendor/platform_tools_version.h | awk '{print substr($3, 2, length($3) - 2)}')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: upload package_source
         uses: actions/upload-artifact@v7
         with:
-          path: ${{ github.workspace }}/build/android-tools-*.tar.xz
+          path: ${{ github.workspace }}/build/android-tools-${{ steps.build_and_install.outputs.version }}.tar.xz
+          archive: false
+      - name: upload vendor_source
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ github.workspace }}/build/android-tools-${{ steps.build_and_install.outputs.version }}-vendor.tar.xz
           archive: false
 
   linux:
@@ -144,7 +154,7 @@ jobs:
       - name: download source
         uses: actions/download-artifact@v8
         with:
-          pattern: android-tools-*.tar.xz
+          pattern: android-tools-${{ needs.upload-src.outputs.version }}.tar.xz
 
       - name: build & install
         run: |
@@ -199,7 +209,7 @@ jobs:
       - name: download source
         uses: actions/download-artifact@v8
         with:
-          pattern: android-tools-*.tar.xz
+          pattern: android-tools-${{ needs.upload-src.outputs.version }}.tar.xz
 
       - name: build & install
         run: |
